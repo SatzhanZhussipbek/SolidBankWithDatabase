@@ -1,0 +1,291 @@
+
+    AccountDAO accountDAO;
+    public void updateAccount(String accountID, double amount) { //1
+        accountDAO.updateAccount(accountID, amount);
+    }
+
+    @Override
+    public List<Account> getAccountsByClientIDAndAccountType(String clientID, AccountType accountType) {
+        return accountDAO.getAccountsByClientIDAndAccountType(clientID, accountType);
+    } //2
+
+    @Override
+    public AccountWithdraw getAccountThatWithdraw(String clientID, String accountID) {
+        if (!accountDAO.getAccountThatWithdraw(clientID, accountID).isWithdrawAllowed()) {
+            System.out.println("You can't withdraw money from a fixed account.");
+        }
+        return accountDAO.getAccountThatWithdraw(clientID, accountID);
+    }
+
+    @Override
+    public Account getClientAccount(String clientID, String accountID) {
+        return accountDAO.getClientAccount(clientID, accountID);
+    }//4
+
+    @Override
+    public List<Account> getAccountsByClientID(String clientID) {
+        return accountDAO.getAccountsByClientID(clientID);
+    }
+
+// AccountEntity class
+
+package com.example.repository;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "ACCOUNT", schema = "PUBLIC", catalog = "TEST")
+public class AccountEntity {
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @Column(name = "ACCOUNT_ID")
+    private long accountId;
+    @Basic
+    @Column(name = "ACCOUNT_TYPE")
+    private Object accountType;
+    @Basic
+    @Column(name = "CLIENT_ID")
+    private Object clientId;
+    @Basic
+    @Column(name = "BALANCE")
+    private Object balance;
+    @Basic
+    @Column(name = "WITHDRAW_ALLOWED")
+    private boolean withdrawAllowed;
+
+    public long getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(long accountId) {
+        this.accountId = accountId;
+    }
+
+    public Object getAccountType() {
+        return accountType;
+    }
+
+    public void setAccountType(Object accountType) {
+        this.accountType = accountType;
+    }
+
+    public Object getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(Object clientId) {
+        this.clientId = clientId;
+    }
+
+    public Object getBalance() {
+        return balance;
+    }
+
+    public void setBalance(Object balance) {
+        this.balance = balance;
+    }
+
+    public boolean isWithdrawAllowed() {
+        return withdrawAllowed;
+    }
+
+    public void setWithdrawAllowed(boolean withdrawAllowed) {
+        this.withdrawAllowed = withdrawAllowed;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        AccountEntity that = (AccountEntity) o;
+
+        if (accountId != that.accountId) return false;
+        if (withdrawAllowed != that.withdrawAllowed) return false;
+        if (accountType != null ? !accountType.equals(that.accountType) : that.accountType != null) return false;
+        if (clientId != null ? !clientId.equals(that.clientId) : that.clientId != null) return false;
+        if (balance != null ? !balance.equals(that.balance) : that.balance != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (accountId ^ (accountId >>> 32));
+        result = 31 * result + (accountType != null ? accountType.hashCode() : 0);
+        result = 31 * result + (clientId != null ? clientId.hashCode() : 0);
+        result = 31 * result + (balance != null ? balance.hashCode() : 0);
+        result = 31 * result + (withdrawAllowed ? 1 : 0);
+        return result;
+    }
+}
+
+
+
+package com.example.repository.entity;
+// Account
+
+@Entity
+@Table(name="ACCOUNT")
+public class Account {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+    @Column("account_id")
+    private long accountID;
+    @Column("account_type")
+    private AccountType accountType;
+    @Column("client_id")
+    private String clientID;
+    @Column("balance")
+    private double balance;
+    @Column("withdraw_allowed")
+    private boolean withdrawAllowed;
+
+    public Account(long accountID, AccountType accountType,
+                    String clientID, double balance,
+                    boolean withdrawAllowed) {
+        this.accountID = accountID;
+        this.accountType = accountType;
+        this.clientID = clientID;
+        this.balance = balance;
+        this.withdrawAllowed = withdrawAllowed;
+    }
+
+    public Account() {
+
+    }
+
+    public String getAccountID() {
+        return String.format("%03d%06d", 1, accountID);
+    }
+
+    public void setAccountID(long accountID) {
+        this.accountID = accountID;
+    }
+
+    public AccountType getAccountType() {
+        return accountType;
+    }
+
+    public void setAccountType(AccountType accountType) {
+        this.accountType = accountType;
+    }
+
+    public String getClientID() {
+        return clientID;
+    }
+
+    public void setClientID(String clientID) {
+        this.clientID = clientID;
+    }
+
+    public double getBalance() {
+        return balance;
+    }
+
+    public void setBalance(double balance) {
+        this.balance = balance;
+    }
+
+    public boolean isWithdrawAllowed() {
+        return withdrawAllowed;
+    }
+
+    public void setWithdrawAllowed(boolean withdrawAllowed) {
+        this.withdrawAllowed = withdrawAllowed;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Account{id='%03d%06d', clientID='%s', balance='%.1f'}", 1, accountID, clientID, balance);
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+}
+
+// Transaction
+
+package com.example.repository.entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.data.relational.core.mapping.Table;
+
+
+@org.springframework.data.relational.core.mapping.Table(name = "TRANSACTION")
+@AllArgsConstructor
+@Getter
+@Setter
+public class Transaction {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "transact_id")
+    private long id;
+    @Column(name = "client_id")
+    private String clientID;
+    @Column(name = "acc_id")
+    private String accountID;
+    @Column(name = "account_type")
+    private AccountType accountType;
+    @Column(name = "amount")
+    private double amount;
+
+    public Transaction(String clientID, String accountID, AccountType
+                       accountType, double amount) {
+        this.clientID = clientID;
+        this.accountID = accountID;
+        this.accountType = accountType;
+        this.amount = amount;
+    }
+
+    public Transaction() {
+
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Transaction[id=%s, account=%s, amount=%.2f, account type=%s]", clientID,
+                accountID, amount, accountType);
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+}
+spring.sql.init.data-locations=resources/db/migrate/V2__create.sql
+CREATE TABLE if not exists ACCOUNT
+(
+    id IDENTITY,
+    account_id NVARCHAR(40) NOT NULL,
+    account_type NVARCHAR(30)  NOT NULL,
+    client_id NVARCHAR(40)  NOT NULL,
+    balance DOUBLE NOT NULL,
+    withdraw_allowed BOOLEAN NOT NULL,
+    PRIMARY KEY(id)
+);
+
+CREATE TABLE if not exists TRANSACTION
+(
+    transact_id IDENTITY NOT NULL PRIMARY KEY,
+    client_id NVARCHAR(40) NOT NULL,
+    acc_id NVARCHAR(40) NOT NULL,
+    account_type NVARCHAR(30) NOT NULL,
+    amount DOUBLE NOT NULL,
+    PRIMARY KEY(transact_id)
+);
+
+
